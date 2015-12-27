@@ -13,20 +13,17 @@ import java.util.Date;
 
 /**
  * Todo:
- * Inputarea height bigger
  * 
- * file IO and classification
- * font size and style customization
- * 
- * Save work status, do classification
+ * work classification, pause and resume
+ * font style customization, font display
  * 
  * @author tsinghuabci02
  */
 public class WorkflowRecorder{
 	
 	private JFrame backgroundFrame = null;
-	private int BACKGROUND_WIDTH = 800;
-	private int BACKGROUND_HEIGHT = 650;
+	private int BACKGROUND_WIDTH = 350;
+	private int BACKGROUND_HEIGHT = 350;
 	private float FONT_SIZE = 30.0f;
 	
 	private JScrollPane jScrollPanel = null;
@@ -34,26 +31,28 @@ public class WorkflowRecorder{
 	
 	private JTextArea inputArea = null;
     
-	boolean firstLog = true;
+	int logTimes = 0;
 	long firstTime = -1;
+	long lastTime = -1;
+	
+	String FILE_NAME = "log.txt";
 	
 	public void build() throws FontFormatException, IOException{
-		/*
-		Font customFont = Font.createFont(Font.TRUETYPE_FONT, new File("Fonts\\YaHei Consolas Hybrid.ttf")).deriveFont(25f);
+		
+		Font customFont = Font.createFont(Font.TRUETYPE_FONT, new File("Fonts\\YaHei Consolas Hybrid.ttf")).deriveFont(15f);
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         ge.registerFont(Font.createFont(Font.TRUETYPE_FONT, new File("Fonts\\YaHei Consolas Hybrid.ttf")));
-		*/
 		
 		logTextArea = new JTextArea();
 		logTextArea.setEditable(false);
-		logTextArea.setFont(logTextArea.getFont().deriveFont(FONT_SIZE));
+		//logTextArea.setFont(logTextArea.getFont().deriveFont(15f));
 		logTextArea.setLineWrap(true);
-		//logTextArea.setFont(customFont);
+		logTextArea.setFont(customFont);
 		jScrollPanel = new JScrollPane(logTextArea);
 		
-		inputArea = new JTextArea("", 3, 3);
+		inputArea = new JTextArea("", 3, 2);
 		inputArea.setLineWrap(true);
-        inputArea.setFont(inputArea.getFont().deriveFont(30f));
+        inputArea.setFont(inputArea.getFont().deriveFont(20f));
         inputArea.setSize(2, 1);
         inputArea.setBackground(Color.LIGHT_GRAY);
         
@@ -66,15 +65,26 @@ public class WorkflowRecorder{
 	    input.put(enter, "text-submit");
 	    ActionMap actions = inputArea.getActionMap();
 	    actions.put("text-submit", new AbstractAction() {
-	        @Override
+			private static final long serialVersionUID = -486793975637083782L;
+			@Override
 	        public void actionPerformed(ActionEvent e) {
-	        	if(firstLog) {
+	        	if(logTimes == 0) {
 	        		firstTime = System.currentTimeMillis();
-	        		firstLog = false;
+	        	} else {
+	        		lastTime = System.currentTimeMillis();
 	        	}
+	        	if(inputArea.getText().length() == 0)
+	        		return;
 	        	
-	        	logTextArea.insert(sdf.format(new Date())+inputArea.getText()+"\n", 0);
-				inputArea.setText("");
+	        	logTimes++;
+	        	String appendText = sdf.format(new Date())+inputArea.getText()+"\n";
+	        	
+	        	writeToFile(FILE_NAME, appendText);
+	        	logTextArea.append(appendText);
+	        	//logTextArea.insert(sdf.format(new Date())+inputArea.getText()+"\n", 0);
+	        	//logTextArea.setCaretPosition(0);
+	        	System.out.println(backgroundFrame.getSize().toString());
+	        	inputArea.setText("");
 	        }
 	    });
 	    
@@ -89,31 +99,10 @@ public class WorkflowRecorder{
 		
 		backgroundFrame.addWindowListener(new java.awt.event.WindowAdapter() {
 	        public void windowClosing(WindowEvent winEvt) {
-	        	if(firstLog) {
+	        	if(logTimes < 2) {
 	        		System.exit(0);
 	        	}
-	        	
-	        	// Save the log
-	        	FileOutputStream os = null;
-	    		OutputStreamWriter or = null;
-	    		BufferedWriter on = null;
-	    		
-	    		try {
-					os = new FileOutputStream("log.txt", true);
-					or = new OutputStreamWriter(os);
-					on = new BufferedWriter(or);
-					
-					on.write( sdf.format(new Date()) + "Worked for " + String.format("%.2f",(System.currentTimeMillis() - firstTime) / 60000.0) + "minutes\n");
-					on.write(logTextArea.getText());
-					on.flush();
-					
-					on.close();
-					or.close();
-					os.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				} 
-				
+	        	writeToFile(FILE_NAME, "\n");				
 	        }
 	    });
 		
@@ -126,6 +115,25 @@ public class WorkflowRecorder{
 	    inputArea.requestFocus();
 	}
 	
+	protected void writeToFile(String file_name, String text) {
+		FileOutputStream os = null;
+		OutputStreamWriter or = null;
+		BufferedWriter on = null;
+		try {
+			os = new FileOutputStream(file_name, true);
+			or = new OutputStreamWriter(os);
+			on = new BufferedWriter(or);
+			on.write(text);
+			on.flush();
+			
+			on.close();
+			or.close();
+			os.close();
+		} catch (IOException error) {
+			error.printStackTrace();
+		}	
+	}
+
 	public static void main(String[] args) throws FontFormatException, IOException{		
 		new WorkflowRecorder().build();
 	}
