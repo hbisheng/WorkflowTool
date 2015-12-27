@@ -83,7 +83,7 @@ public class WorkflowRecorder{
 	        	logTextArea.append(appendText);
 	        	//logTextArea.insert(sdf.format(new Date())+inputArea.getText()+"\n", 0);
 	        	//logTextArea.setCaretPosition(0);
-	        	System.out.println(backgroundFrame.getSize().toString());
+	        	//System.out.println(backgroundFrame.getSize().toString());
 	        	inputArea.setText("");
 	        }
 	    });
