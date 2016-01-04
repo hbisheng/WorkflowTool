@@ -20,7 +20,7 @@ import java.util.Date;
 /**
  * TODO:
  * 1. (Developed)A boss key, call it and hide it easily. 
- * 2. Extended features like timers and alarms(<rest> and wake me up in 5 minutes)
+ * 2. Extended features like timers(record how much time at work) and alarms(<rest> and wake me up in 5 minutes)
  * 3. Shortcut key like eclipse, convenient for <interrupt>, <flow> and all kinds of labels. 
  * (Write a compiler for it to recognize labels?)
  * 4. Font style customization, font display
@@ -28,6 +28,7 @@ import java.util.Date;
  * 6. Work classification as different files, and thus pause and resume
  * 7. Undo function.
  * 8. A beautiful UI. Modern and fashion.
+ * 9. Some text to show in the status bar when needed. Interactions like a game. Gold.(Accumulate when your work time increase) 
  * BUG:
  * 1. Sometimes the frame was not brought to the front.
  * @author tsinghuabci02
