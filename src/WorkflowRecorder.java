@@ -19,18 +19,20 @@ import java.util.Date;
 
 /**
  * TODO:
- * 1. (Developed)A boss key, call it and hide it easily. 
+ * 1. (Done, using Alt+Shift+W) A boss key, call it and hide it easily. 
  * 2. Extended features like timers(record how much time at work) and alarms(<rest> and wake me up in 5 minutes)
  * 3. Shortcut key like eclipse, convenient for <interrupt>, <flow> and all kinds of labels. 
  * (Write a compiler for it to recognize labels?)
  * 4. Font style customization, font display
  * 5. Interrupt mechanism, nested interrupt. With marks, it would be better for me to classify events.
- * 6. Work classification as different files, and thus pause and resume
- * 7. Undo function.
+ * 6. Work classification as different files, and thus pause and resume. One important feature is to tell me what I'm doing.
+ * 7. (Done, using Ctrl+Z) Undo function. 
  * 8. A beautiful UI. Modern and fashion.
- * 9. Some text to show in the status bar when needed. Interactions like a game. Gold.(Accumulate when your work time increase) 
+ * 9. Some text to show in the status bar when needed. Interactions like a game. Gold.(Accumulate when your work time increase)
+ * 10. Format output, and thus easier for future analysis.
+ * 11. Redo function? You need to maintain an input path.
  * BUG:
- * 1. Sometimes the frame was not brought to the front.
+ * 1. (Solved?)Sometimes the frame was not brought to the front.
  * @author tsinghuabci02
  */
 public class WorkflowRecorder{
@@ -84,9 +86,17 @@ public class WorkflowRecorder{
         // Set key mapping
         InputMap input = inputArea.getInputMap();
 	    KeyStroke enter = KeyStroke.getKeyStroke("ENTER");
+	    input.put(enter, "text-submit");
+	    
 	    KeyStroke shiftEnter = KeyStroke.getKeyStroke("ctrl ENTER");
 	    input.put(shiftEnter, "insert-break");  // input.get(enter)) = "insert-break"
-	    input.put(enter, "text-submit");
+	    
+	    KeyStroke crtlZ = KeyStroke.getKeyStroke("ctrl Z");
+	    input.put(crtlZ, "deleteLastLine");
+	    
+	    KeyStroke crtlY = KeyStroke.getKeyStroke("ctrl Y");
+	    input.put(crtlY, "reverseLastLine");
+	    
 	    ActionMap actions = inputArea.getActionMap();
 	    actions.put("text-submit", new AbstractAction() {
 			private static final long serialVersionUID = -486793975637083782L;
@@ -101,7 +111,7 @@ public class WorkflowRecorder{
 	        		return;
 	        	
 	        	logTimes++;
-	        	String appendText = sdf.format(new Date())+inputArea.getText()+"\n";      	
+	        	String appendText = sdf.format(new Date())+"\n"+inputArea.getText()+"\n";      	
 	        	writeToFile(getFileName(), appendText);
 	        	logTextArea.append(appendText);
 	        	logTextArea.setCaretPosition(logTextArea.getDocument().getLength());
@@ -112,6 +122,21 @@ public class WorkflowRecorder{
 	        	//System.out.println(backgroundFrame.getSize().toString());
 	        	
 	        	inputArea.setText("");
+	        }
+	    });
+	    
+	    actions.put("deleteLastLine", new AbstractAction() {
+			@Override
+	        public void actionPerformed(ActionEvent e) {
+	        	deleteLastLineInFile(getFileName());
+	        	logTextArea.setText(readFile(getFileName()));
+	        }
+	    });
+	    
+	    actions.put("reverseLastLine", new AbstractAction() {
+			@Override
+	        public void actionPerformed(ActionEvent e) {
+	        	
 	        }
 	    });
 	    
@@ -156,6 +181,7 @@ public class WorkflowRecorder{
 	    
 	    // Shortcut
 	    JIntellitype.getInstance().registerHotKey(1, JIntellitype.MOD_ALT+JIntellitype.MOD_SHIFT, 'W');  
+	    
 	    JIntellitype.getInstance().addHotKeyListener(new HotkeyListener() {
 	        @Override
 	        public void onHotKey(int markCode) {
@@ -163,6 +189,7 @@ public class WorkflowRecorder{
 	        		backgroundFrame.setVisible(false);
 	        	} else {
 	        		backgroundFrame.setVisible(true);
+	        		backgroundFrame.toFront();
 	        		inputArea.requestFocus();
 	        	}
 	        	getFocus = !getFocus;
@@ -195,6 +222,55 @@ public class WorkflowRecorder{
 		}	
 	}
 
+	public static void deleteLastLineInFile(String fileName) {
+		StringBuilder fileWithoutLastLine = new StringBuilder();
+		
+		FileInputStream is;
+		InputStreamReader ir;
+		BufferedReader in;
+		
+		FileOutputStream os = null;
+		OutputStreamWriter or = null;
+		BufferedWriter on = null;
+		
+		try {
+			// Read
+			is = new FileInputStream(fileName);
+			ir = new InputStreamReader(is);
+			in = new BufferedReader(ir);
+			
+			String s1 = null;
+			String s2 = null;
+			while( (s2 = in.readLine()) != null ) {	
+				if(s1 != null && s2 != null) {
+					fileWithoutLastLine.append(s1+"\n");
+				}
+				s1 = s2;
+			}
+			in.close();
+		
+			//Write
+			try {
+				os = new FileOutputStream(fileName, false);
+				or = new OutputStreamWriter(os);
+				on = new BufferedWriter(or);
+				on.write(fileWithoutLastLine.toString());
+				on.flush();
+				
+				on.close();
+				or.close();
+				os.close();
+			} catch (IOException error) {
+				error.printStackTrace();
+			}
+		}
+		catch(Exception e)
+		{
+			System.out.println("Exception!");
+		}
+		
+	}
+	
 	public static String readFile(String fileName) //, String charSet)
 	{
 		StringBuilder wholefile = new StringBuilder();
